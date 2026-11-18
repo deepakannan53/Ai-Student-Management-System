@@ -1,0 +1,39 @@
+{% extends 'students/base.html' %}
+{% block content %}
+<div class="n-card p-6 space-y-5">
+  <h1 class="font-dot text-2xl">ATTENDANCE & INTERNAL MARKS MATRIX</h1>
+  <div class="overflow-x-auto">
+    <table class="w-full text-left text-xs border-collapse">
+      <thead><tr class="border-b border-[var(--border-color)] text-[var(--text-muted)]"><th class="py-3 px-2">SUBJECT</th><th class="py-3 px-2">TUTOR</th><th class="py-3 px-2">ATTENDED</th><th class="py-3 px-2">%</th><th class="py-3 px-2">ADVISORY</th></tr></thead>
+      <tbody class="divide-y divide-[var(--border-color)]">
+        {% for a in attendance_records %}
+          <tr>
+            <td class="py-3 px-2 font-bold">{{ a.subject.code }} — {{ a.subject.name }}</td>
+            <td class="py-3 px-2 text-[var(--text-muted)]">{{ a.subject.tutor.name }}</td>
+            <td class="py-3 px-2">{{ a.attended_classes }} / {{ a.total_classes }}</td>
+            <td class="py-3 px-2 font-bold {% if a.is_low %}n-red-text{% endif %}">{{ a.percentage }}%</td>
+            <td class="py-3 px-2 text-[var(--text-muted)]">{{ a.safe_bunk_or_recovery }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+<div class="n-card p-6 space-y-5">
+  <h2 class="font-dot text-xl">INTERNAL ASSESSMENT SCORES</h2>
+  <div class="overflow-x-auto">
+    <table class="w-full text-left text-xs border-collapse">
+      <thead><tr class="border-b border-[var(--border-color)] text-[var(--text-muted)]"><th class="py-3 px-2">SUBJECT</th><th class="py-3 px-2">CIA-1</th><th class="py-3 px-2">CIA-2</th><th class="py-3 px-2">MODEL</th><th class="py-3 px-2">ASSIGN</th><th class="py-3 px-2">TOTAL</th></tr></thead>
+      <tbody class="divide-y divide-[var(--border-color)]">
+        {% for m in internal_marks %}
+          <tr>
+            <td class="py-3 px-2 font-bold">{{ m.subject.code }} — {{ m.subject.name }}</td>
+            <td class="py-3 px-2">{{ m.cia_1 }}</td><td class="py-3 px-2">{{ m.cia_2 }}</td><td class="py-3 px-2">{{ m.model_exam }}</td><td class="py-3 px-2">{{ m.assignment_marks }}</td>
+            <td class="py-3 px-2 font-bold n-red-text">{{ m.total_internal }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

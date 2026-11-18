@@ -1,0 +1,97 @@
+{% extends 'students/base.html' %}
+{% block content %}
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+  <div class="n-card p-5 space-y-1">
+    <div class="text-[10px] uppercase text-[var(--text-muted)]">Student Identity</div>
+    <div class="font-dot text-xl">{{ profile.user.get_full_name|default:profile.user.username }}</div>
+    <div class="text-xs text-[var(--text-muted)]">{{ profile.roll_no }} &bull; SEM {{ profile.semester }}</div>
+  </div>
+  <div class="n-card p-5 space-y-1">
+    <div class="text-[10px] uppercase text-[var(--text-muted)]">Aggregate Attendance</div>
+    <div class="font-dot text-3xl {% if avg_attendance < 75 %}n-red-text{% endif %}">{{ avg_attendance }}%</div>
+    <div class="text-[11px] text-[var(--text-muted)]">Min Required: 75.0%</div>
+  </div>
+  <div class="n-card p-5 space-y-1">
+    <div class="text-[10px] uppercase text-[var(--text-muted)]">Cumulative GPA</div>
+    <div class="font-dot text-3xl">{{ profile.cgpa }}</div>
+    <div class="text-[11px] text-[var(--text-muted)]">{{ profile.department|truncatechars:26 }}</div>
+  </div>
+  <div class="n-card p-5 space-y-1 border-l-4 border-l-[#D71921]">
+    <div class="text-[10px] uppercase text-[var(--text-muted)]">Action Queue</div>
+    <div class="font-dot text-3xl">{{ pending_hw }} HW / {{ active_quizzes|length }} QUIZ</div>
+    <a href="{% url 'line_agent' %}" class="text-[11px] n-red-text underline">Ask LINE AI to plan &rarr;</a>
+  </div>
+</div>
+
+{% if dynamic_widgets %}
+<section class="space-y-3">
+  <div class="flex items-center justify-between">
+    <h2 class="font-dot text-base flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-[#D71921]"></span> LINE AI // DYNAMIC DASHBOARD WIDGETS</h2>
+    <a href="{% url 'line_agent' %}" class="text-xs text-[var(--text-muted)] hover:text-white">+ Generate New Widget</a>
+  </div>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    {% for w in dynamic_widgets %}
+      <div class="n-card p-5 space-y-3 {% if w.accent_red %}border-[#D71921]{% endif %}">
+        <div class="flex items-center justify-between">
+          <span class="text-[10px] px-2.5 py-0.5 rounded-full {% if w.accent_red %}n-red{% else %}border border-[var(--border-color)]{% endif %}">{{ w.get_widget_type_display }}</span>
+          <form method="POST" action="{% url 'toggle_widget_pin' w.id %}">{% csrf_token %}<button type="submit" class="text-[10px] text-[var(--text-muted)] hover:text-white">[UNPIN]</button></form>
+        </div>
+        <h3 class="font-dot text-lg">{{ w.title }}</h3>
+        <ul class="space-y-1.5 text-xs">{% for item in w.payload.items %}<li class="flex items-start gap-2"><span class="n-red-text font-bold">&bull;</span><span>{{ item }}</span></li>{% endfor %}</ul>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <div class="n-card p-5 space-y-4">
+    <div class="flex items-center justify-between"><h3 class="font-dot text-base">ATTENDANCE (5 SUBJECTS)</h3><a href="{% url 'academics' %}" class="text-xs text-[var(--text-muted)]">ALL &rarr;</a></div>
+    <div class="space-y-3">
+      {% for rec in attendance_list %}
+        <div class="p-3 rounded-xl bg-[var(--bg-elevated)] space-y-1.5">
+          <div class="flex justify-between text-xs"><span class="font-bold">{{ rec.subject.code }}</span><span class="{% if rec.is_low %}n-red-text font-bold{% endif %}">{{ rec.percentage }}%</span></div>
+          <div class="w-full h-1.5 bg-black rounded-full overflow-hidden"><div class="h-full {% if rec.is_low %}bg-[#D71921]{% else %}bg-white{% endif %}" style="width: {{ rec.percentage }}%;"></div></div>
+          <div class="text-[10px] text-[var(--text-muted)]">{{ rec.safe_bunk_or_recovery }}</div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="n-card p-5 space-y-4">
+    <div class="flex items-center justify-between"><h3 class="font-dot text-base">AI MAIL TRIAGE</h3><a href="{% url 'mail_hub' %}" class="text-xs text-[var(--text-muted)]">INBOX &rarr;</a></div>
+    <div class="space-y-2.5">
+      {% for m in recent_mails %}
+        <a href="{% url 'mail_hub' %}?cat={{ m.category }}" class="block p-3 rounded-xl bg-[var(--bg-elevated)] hover:border hover:border-white space-y-1">
+          <div class="flex items-center justify-between text-[10px]"><span class="uppercase px-2 py-0.5 rounded-full {% if m.is_urgent %}n-red{% else %}border border-[var(--border-color)]{% endif %}">{{ m.category }}</span><span class="text-[var(--text-muted)]">{{ m.sender_name|truncatechars:18 }}</span></div>
+          <div class="text-xs font-bold truncate">{{ m.subject }}</div>
+          <div class="text-[11px] text-[var(--text-muted)] truncate">{{ m.ai_summary }}</div>
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="space-y-6">
+    <div class="n-card p-5 space-y-3">
+      <div class="flex items-center justify-between"><h3 class="font-dot text-base">GOOGLE MEET LIVE</h3><a href="{% url 'google_meet' %}" class="text-xs text-[var(--text-muted)]">ALL &rarr;</a></div>
+      {% for meet in live_meets %}
+        <div class="p-3 rounded-xl bg-[var(--bg-elevated)] border border-[#D71921]/50 space-y-2">
+          <div class="flex items-center gap-2 text-[10px] n-red-text font-bold"><span class="w-2 h-2 rounded-full bg-[#D71921] glyph-pulse"></span> {{ meet.subject.code }} // LIVE SESSION</div>
+          <div class="text-xs font-bold">{{ meet.topic }}</div>
+          <a href="{{ meet.meet_url }}" target="_blank" class="inline-block n-pill n-red px-4 py-1.5 text-[11px] font-bold">JOIN MEET &nearr;</a>
+        </div>
+      {% empty %}<p class="text-xs text-[var(--text-muted)]">No live classes right now.</p>{% endfor %}
+    </div>
+
+    <div class="n-card p-5 space-y-3">
+      <div class="flex items-center justify-between"><h3 class="font-dot text-base">HOD NOTICE BOARD</h3><a href="{% url 'notices' %}" class="text-xs text-[var(--text-muted)]">ALL &rarr;</a></div>
+      {% for n in notices %}
+        <div class="p-3 rounded-xl bg-[var(--bg-elevated)] space-y-1">
+          <div class="text-[10px] {% if n.priority == 'URGENT' %}n-red-text font-bold{% else %}text-[var(--text-muted)]{% endif %}">[{{ n.priority }}] {{ n.posted_by }}</div>
+          <div class="text-xs font-bold">{{ n.title }}</div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

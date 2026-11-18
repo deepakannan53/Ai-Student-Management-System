@@ -1,0 +1,193 @@
+{% extends 'staff_hod/faculty_base.html' %}
+{% block content %}
+
+<!-- STAFF HERO TELEMETRY -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+  <div class="n-card p-5 space-y-1">
+    <div class="text-[10px] uppercase text-[var(--text-muted)]">Faculty Identity</div>
+    <div class="font-dot text-xl">{{ tutor.name }}</div>
+    <div class="text-xs text-[var(--text-muted)]">{{ tutor.designation }}</div>
+  </div>
+  <div class="n-card p-5 space-y-1">
+    <div class="text-[10px] uppercase text-[var(--text-muted)]">Assigned Course</div>
+    <div class="font-dot text-2xl n-red-text">{% for s in subjects %}{{ s.code }}{% endfor %}</div>
+    <div class="text-xs text-[var(--text-muted)] truncate">{% for s in subjects %}{{ s.name }}{% endfor %}</div>
+  </div>
+  <div class="n-card p-5 space-y-1">
+    <div class="text-[10px] uppercase text-[var(--text-muted)]">Work Assigned</div>
+    <div class="font-dot text-2xl">{{ homeworks|length }} HW / {{ quizzes|length }} QUIZ</div>
+    <div class="text-xs text-[var(--text-muted)]">Synced live to students</div>
+  </div>
+  <div class="n-card p-5 space-y-1 border-l-4 border-l-[#D71921]">
+    <div class="text-[10px] uppercase text-[var(--text-muted)]">Library Chat Queue</div>
+    <div class="font-dot text-2xl">{{ open_lib_count }} OPEN</div>
+    <div class="text-xs text-[var(--text-muted)]">Student resource requests</div>
+  </div>
+</div>
+
+<!-- ASSIGN HOMEWORK + CREATE PROCTORED QUIZ + SCHEDULE GOOGLE MEET -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 text-xs">
+  <!-- 1. ASSIGN HOMEWORK -->
+  <div class="n-card p-5 space-y-3">
+    <h2 class="font-dot text-lg flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-[#D71921]"></span> ASSIGN HOMEWORK</h2>
+    <form method="POST" action="{% url 'staff_assign_homework' %}" class="space-y-3">
+      {% csrf_token %}
+      <select name="subject_id" class="n-input" required>
+        {% for s in subjects %}<option value="{{ s.id }}">{{ s.code }} - {{ s.name }}</option>{% endfor %}
+      </select>
+      <input type="text" name="title" required placeholder="Homework / Lab Assignment Title..." class="n-input">
+      <textarea name="description" rows="2" required placeholder="Instructions & deliverables..." class="n-input"></textarea>
+      <div class="flex items-center gap-2">
+        <input type="number" name="due_days" value="3" min="1" max="30" class="n-input w-24">
+        <span class="text-[var(--text-muted)]">Days until deadline</span>
+      </div>
+      <button type="submit" class="w-full n-pill n-red py-2.5 font-bold">PUBLISH HOMEWORK &rarr;</button>
+    </form>
+  </div>
+
+  <!-- 2. POST PROCTORED ONLINE QUIZ -->
+  <div class="n-card p-5 space-y-3">
+    <h2 class="font-dot text-lg flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-[#D71921]"></span> POST PROCTORED QUIZ</h2>
+    <form method="POST" action="{% url 'staff_create_quiz' %}" class="space-y-2.5">
+      {% csrf_token %}
+      <select name="subject_id" class="n-input" required>
+        {% for s in subjects %}<option value="{{ s.id }}">{{ s.code }} - {{ s.name }}</option>{% endfor %}
+      </select>
+      <input type="text" name="title" required placeholder="Quiz Title (e.g., CIA-2 Rapid Check)" class="n-input">
+      <div class="grid grid-cols-2 gap-2">
+        <input type="number" name="duration_minutes" value="15" min="5" placeholder="Mins" class="n-input">
+        <input type="number" name="max_tab_switches" value="2" min="1" placeholder="Max Tab Switches" class="n-input">
+      </div>
+      <input type="text" name="q_text" required placeholder="MCQ Question..." class="n-input">
+      <div class="grid grid-cols-2 gap-2">
+        <input type="text" name="opt_a" required placeholder="Option A" class="n-input">
+        <input type="text" name="opt_b" required placeholder="Option B" class="n-input">
+        <input type="text" name="opt_c" required placeholder="Option C" class="n-input">
+        <input type="text" name="opt_d" required placeholder="Option D" class="n-input">
+      </div>
+      <select name="correct_option" class="n-input">
+        <option value="A">Correct: A</option><option value="B">Correct: B</option><option value="C">Correct: C</option><option value="D">Correct: D</option>
+      </select>
+      <button type="submit" class="w-full n-pill n-red py-2.5 font-bold">PUBLISH QUIZ WITH RULES</button>
+    </form>
+  </div>
+
+  <!-- 3. SCHEDULE GOOGLE MEET LIVE CLASS -->
+  <div class="n-card p-5 space-y-3 flex flex-col justify-between">
+    <div class="space-y-3">
+      <h2 class="font-dot text-lg flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-[#D71921]"></span> LAUNCH GOOGLE MEET</h2>
+      <form method="POST" action="{% url 'staff_schedule_meet' %}" class="space-y-3">
+        {% csrf_token %}
+        <select name="subject_id" class="n-input" required>
+          {% for s in subjects %}<option value="{{ s.id }}">{{ s.code }} - {{ s.name }}</option>{% endfor %}
+        </select>
+        <input type="text" name="topic" required placeholder="Lecture / Doubt Session Topic..." class="n-input">
+        <input type="url" name="meet_url" value="https://meet.google.com/new" required class="n-input">
+        <button type="submit" class="w-full n-pill n-red py-2.5 font-bold">PUSH MEET LINK TO STUDENTS</button>
+      </form>
+    </div>
+    <div class="pt-3 border-t border-[var(--border-color)] space-y-1.5">
+      <div class="text-[10px] text-[var(--text-muted)] uppercase">Active Links</div>
+      {% for m in meetings %}
+        <div class="p-2.5 rounded-xl bg-[var(--bg-elevated)] flex justify-between items-center">
+          <span class="truncate">{{ m.topic }}</span>
+          <a href="{{ m.meet_url }}" target="_blank" class="n-red-text font-bold shrink-0">OPEN &nearr;</a>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- STUDENT SUBMISSIONS & GRADING + ATTENDANCE/MARKS CONTROL -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 text-xs">
+  <div class="n-card p-5 space-y-4">
+    <h2 class="font-dot text-lg">STUDENT HOMEWORK SUBMISSIONS</h2>
+    <div class="space-y-3">
+      {% for sub in submissions %}
+        <div class="p-4 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border-color)] space-y-2">
+          <div class="flex justify-between">
+            <span class="font-bold">{{ sub.student.roll_no }} &bull; {{ sub.homework.title }}</span>
+            <span class="px-2 py-0.5 rounded-full {% if sub.status == 'PENDING' %}n-red{% else %}bg-white text-black font-bold{% endif %}">{{ sub.status }}</span>
+          </div>
+          {% if sub.submission_text %}<p class="text-[var(--text-muted)]">"{{ sub.submission_text }}"</p>{% endif %}
+          <form method="POST" action="{% url 'staff_grade_homework' sub.id %}" class="flex gap-2 pt-1">
+            {% csrf_token %}
+            <input type="text" name="remarks" value="{{ sub.remarks }}" placeholder="Grade / Remarks (e.g., 10/10 Excellent)" class="n-input">
+            <button type="submit" class="n-pill px-4 py-1.5 font-bold shrink-0">GRADE</button>
+          </form>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- ATTENDANCE & MARKS UPDATE -->
+  <div class="n-card p-5 space-y-4">
+    <h2 class="font-dot text-lg">UPDATE STUDENT ATTENDANCE & INTERNAL MARKS</h2>
+    {% for att in attendance_records %}
+      <form method="POST" action="{% url 'staff_update_attendance' %}" class="p-3.5 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border-color)] space-y-2">
+        {% csrf_token %}<input type="hidden" name="record_id" value="{{ att.id }}">
+        <div class="flex justify-between font-bold">
+          <span>{{ att.student.roll_no }} ({{ att.subject.code }}) — ATTENDANCE</span>
+          <span class="{% if att.is_low %}n-red-text{% endif %}">{{ att.percentage }}%</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <input type="number" name="attended_classes" value="{{ att.attended_classes }}" class="n-input">
+          <span>/</span>
+          <input type="number" name="total_classes" value="{{ att.total_classes }}" class="n-input">
+          <button type="submit" class="n-pill n-red px-4 py-2 font-bold shrink-0">SAVE</button>
+        </div>
+      </form>
+    {% endfor %}
+
+    {% for mk in marks_records %}
+      <form method="POST" action="{% url 'staff_update_marks' %}" class="p-3.5 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border-color)] space-y-2">
+        {% csrf_token %}<input type="hidden" name="mark_id" value="{{ mk.id }}">
+        <div class="flex justify-between font-bold">
+          <span>{{ mk.student.roll_no }} ({{ mk.subject.code }}) — INTERNAL MARKS</span>
+          <span class="n-red-text">TOTAL: {{ mk.total_internal }}</span>
+        </div>
+        <div class="grid grid-cols-5 gap-2">
+          <input type="number" step="0.5" name="cia_1" value="{{ mk.cia_1 }}" title="CIA-1" class="n-input">
+          <input type="number" step="0.5" name="cia_2" value="{{ mk.cia_2 }}" title="CIA-2" class="n-input">
+          <input type="number" step="0.5" name="model_exam" value="{{ mk.model_exam }}" title="Model" class="n-input">
+          <input type="number" step="0.5" name="assignment_marks" value="{{ mk.assignment_marks }}" title="Assignment" class="n-input">
+          <button type="submit" class="n-pill n-red font-bold">SAVE</button>
+        </div>
+      </form>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- LIBRARY REQUEST CHATBOX -->
+<div class="n-card p-5 space-y-4 text-xs">
+  <h2 class="font-dot text-lg">STUDENT LIBRARY REQUEST CHATBOX</h2>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    {% for th in lib_threads %}
+      <div class="p-4 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border-color)] space-y-3">
+        <div class="flex justify-between">
+          <span class="font-bold">{{ th.book_or_resource_title }}</span>
+          <span class="px-2 py-0.5 rounded-full n-red text-[10px]">{{ th.status }}</span>
+        </div>
+        <div class="space-y-1.5 max-h-32 overflow-y-auto">
+          {% for m in th.messages.all %}
+            <div class="p-2 rounded-lg bg-[var(--bg-card)]"><strong>{{ m.sender_name }}:</strong> {{ m.message }}</div>
+          {% endfor %}
+        </div>
+        <form method="POST" action="{% url 'staff_library_reply' th.id %}" class="flex gap-2">
+          {% csrf_token %}
+          <select name="status" class="n-input w-32">
+            <option value="OPEN" {% if th.status == 'OPEN' %}selected{% endif %}>OPEN</option>
+            <option value="APPROVED" {% if th.status == 'APPROVED' %}selected{% endif %}>APPROVED</option>
+            <option value="CLOSED" {% if th.status == 'CLOSED' %}selected{% endif %}>CLOSED</option>
+          </select>
+          <input type="text" name="message" placeholder="Reply to student..." class="n-input">
+          <button type="submit" class="n-pill n-red px-4 font-bold">SEND</button>
+        </form>
+      </div>
+    {% empty %}
+      <p class="text-[var(--text-muted)]">No student library requests assigned to you yet.</p>
+    {% endfor %}
+  </div>
+</div>
+
+{% endblock %}

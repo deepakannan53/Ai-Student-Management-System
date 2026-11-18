@@ -1,0 +1,71 @@
+{% extends 'students/base.html' %}
+{% block content %}
+<div x-data="{ draftPrompt: '' }" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <div class="lg:col-span-2 n-card p-6 flex flex-col justify-between space-y-4 min-h-[560px]">
+    <div class="border-b border-[var(--border-color)] pb-3 flex flex-wrap items-center justify-between gap-2">
+      <div>
+        <h1 class="font-dot text-xl flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-[#D71921] glyph-pulse"></span> LINE // AI STUDY CO-PILOT</h1>
+        <p class="text-[11px] text-[var(--text-muted)]">Context-aware study assistant & dynamic dashboard widget generator.</p>
+      </div>
+      <span class="text-[10px] px-3 py-1 rounded-full border {% if ai_status.is_live %}border-emerald-500/50 text-emerald-400{% else %}border-[#D71921] n-red-text{% endif %}">
+        {{ ai_status.label }}
+      </span>
+    </div>
+
+    {% if not ai_status.is_live %}
+    <div class="p-3.5 rounded-2xl bg-[var(--bg-elevated)] border border-[#D71921]/60 text-[11px] flex flex-wrap items-center justify-between gap-2">
+      <span>Running in <strong>Offline Deterministic Mode</strong>. Add <code>GEMINI_API_KEY</code> in your <code>.env</code> file to unlock full Gemini 2.5 intelligence.</span>
+      <a href="{% url 'settings' %}" class="n-pill n-red px-3 py-1 font-bold text-[10px]">SETUP GUIDE &rarr;</a>
+    </div>
+    {% endif %}
+
+    <div class="flex-1 space-y-3 overflow-y-auto max-h-[360px] pr-1 text-xs">
+      {% for msg in chat_history %}
+        <div class="p-4 rounded-2xl {% if msg.role == 'user' %}bg-[var(--bg-elevated)] ml-10 border border-[var(--border-color)]{% else %}bg-[var(--bg-card)] mr-10 border border-[#D71921]/50{% endif %} space-y-2">
+          <div class="text-[10px] uppercase {% if msg.role == 'assistant' %}n-red-text font-bold{% else %}text-[var(--text-muted)]{% endif %}">{{ msg.role }}</div>
+          <div class="whitespace-pre-line leading-relaxed">{{ msg.content }}</div>
+          {% if msg.created_widget %}
+            <div class="p-2.5 rounded-xl bg-[var(--bg-elevated)] border border-[#D71921] text-[11px] flex items-center justify-between">
+              <span>Pinned Widget: <strong>{{ msg.created_widget.title }}</strong></span>
+              <a href="{% url 'dashboard' %}" class="n-red-text underline font-bold">VIEW ON DASHBOARD &rarr;</a>
+            </div>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+
+    <!-- Quick Prompt Chips -->
+    <div class="space-y-2.5 pt-2 border-t border-[var(--border-color)]">
+      <div class="flex flex-wrap gap-1.5 text-[10px]">
+        <button type="button" @click="draftPrompt = 'Create a pinned 3-day exam revision widget for my subjects'" class="n-pill px-3 py-1 bg-[var(--bg-elevated)]">+ Pin Exam Revision Widget</button>
+        <button type="button" @click="draftPrompt = 'How many classes do I need to attend in MCA103 to reach 75%?'" class="n-pill px-3 py-1 bg-[var(--bg-elevated)]">Check 75% Attendance Math</button>
+        <button type="button" @click="draftPrompt = 'Summarize my pending homework deadlines and prioritize them'" class="n-pill px-3 py-1 bg-[var(--bg-elevated)]">Prioritize Homework</button>
+      </div>
+      <form method="POST" class="flex gap-2 text-xs">
+        {% csrf_token %}
+        <input type="text" name="message" x-model="draftPrompt" required placeholder="Ask LINE AI or request a dynamic dashboard widget..." class="n-input">
+        <button type="submit" class="n-pill n-red px-6 py-2.5 font-bold shrink-0">SEND</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="n-card p-6 space-y-4">
+    <h2 class="font-dot text-lg">DYNAMIC DASHBOARD WIDGETS</h2>
+    <p class="text-[11px] text-[var(--text-muted)]">Pin or unpin AI-generated cards shown on your Overall Dashboard.</p>
+    <div class="space-y-3 text-xs">
+      {% for w in widgets %}
+        <div class="p-4 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border-color)] space-y-2">
+          <div class="flex items-center justify-between gap-2">
+            <span class="font-bold">{{ w.title }}</span>
+            <form method="POST" action="{% url 'toggle_widget_pin' w.id %}">
+              {% csrf_token %}
+              <button type="submit" class="n-pill px-2.5 py-0.5 text-[10px] {% if w.is_pinned %}n-red{% endif %}">{% if w.is_pinned %}PINNED{% else %}PIN{% endif %}</button>
+            </form>
+          </div>
+          <ul class="space-y-1 text-[11px] text-[var(--text-muted)]">{% for it in w.payload.items %}<li>&bull; {{ it }}</li>{% endfor %}</ul>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

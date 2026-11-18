@@ -1,0 +1,31 @@
+{% extends 'students/base.html' %}
+{% block content %}
+<div class="n-card p-6 space-y-6">
+  <h1 class="font-dot text-2xl">STAFF HOMEWORK & DELIVERABLES</h1>
+  <div class="space-y-4">
+    {% for item in homework_items %}
+      <div class="p-5 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border-color)] space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-2 text-xs">
+          <span class="px-2.5 py-0.5 rounded-full border border-[var(--border-color)] font-bold">{{ item.homework.subject.code }} — {{ item.homework.subject.name }} ({{ item.homework.subject.tutor.name }})</span>
+          <span class="px-3 py-0.5 rounded-full {% if item.submission.status == 'PENDING' %}n-red{% else %}bg-white text-black font-bold{% endif %}">{{ item.submission.status }}</span>
+        </div>
+        <div>
+          <h3 class="font-dot text-lg">{{ item.homework.title }}</h3>
+          <p class="text-xs text-[var(--text-muted)] mt-1">{{ item.homework.description }}</p>
+          {% if item.submission.remarks %}<p class="text-xs text-white mt-1">Staff Remarks: <strong>{{ item.submission.remarks }}</strong></p>{% endif %}
+          <p class="text-[11px] n-red-text mt-2">Due: {{ item.homework.due_date|date:"d M Y, h:i A" }}</p>
+        </div>
+        <form method="POST" enctype="multipart/form-data" class="space-y-3 text-xs border-t border-[var(--border-color)] pt-3">
+          {% csrf_token %}
+          <input type="hidden" name="homework_id" value="{{ item.homework.id }}">
+          <textarea name="submission_text" rows="2" placeholder="Paste solution notes or GitHub link..." class="n-input">{{ item.submission.submission_text }}</textarea>
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <input type="file" name="attachment" class="text-xs text-[var(--text-muted)]">
+            <button type="submit" class="n-pill n-red px-5 py-2 font-bold">SUBMIT HOMEWORK</button>
+          </div>
+        </form>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

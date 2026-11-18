@@ -1,0 +1,111 @@
+{% extends 'students/base.html' %}
+{% block content %}
+<div x-data="{
+    composeOpen: false, simOpen: false, subjectId: '', intent: 'leave', notes: '',
+    recipientEmail: '', mailSubject: '', mailBody: '', loadingDraft: false,
+    async generateAiDraft() {
+      this.loadingDraft = true;
+      try {
+        const res = await fetch('{% url "ai_draft_mail_api" %}', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+          body: JSON.stringify({ subject_id: this.subjectId, intent: this.intent, notes: this.notes })
+        });
+        const data = await res.json();
+        if (data.recipient_email) this.recipientEmail = data.recipient_email;
+        this.mailSubject = data.subject_line;
+        this.mailBody = data.email_body;
+      } finally { this.loadingDraft = false; }
+    }
+  }" class="space-y-6">
+  <div class="n-card p-6 flex flex-wrap items-center justify-between gap-4">
+    <div>
+      <h1 class="font-dot text-2xl">AI-AGENTIC SMTP MAIL HUB</h1>
+      <p class="text-xs text-[var(--text-muted)]">Auto-sorted into Staff, Notice, Placements, Competition & Others. Send automated tutor mail via SMTP.</p>
+    </div>
+    <div class="flex flex-wrap gap-2 text-xs">
+      <button @click="composeOpen = !composeOpen; simOpen = false" class="n-pill n-red px-4 py-2 font-bold">+ AI COMPOSE TO TUTOR</button>
+      <button @click="simOpen = !simOpen; composeOpen = false" class="n-pill px-4 py-2">+ TEST AI INBOUND TRIAGE</button>
+      <form method="POST">{% csrf_token %}<input type="hidden" name="action" value="sync_imap"><button type="submit" class="n-pill px-4 py-2">SYNC IMAP</button></form>
+    </div>
+  </div>
+
+  <div x-show="composeOpen" style="display:none;" class="n-card p-6 border-[#D71921] space-y-4">
+    <div class="flex items-center justify-between"><h2 class="font-dot text-lg n-red-text">AUTOMATED TUTOR MAIL AGENT (SMTP)</h2><button @click="composeOpen = false" class="text-xs">[CLOSE]</button></div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+      <div>
+        <label class="block text-[var(--text-muted)] mb-1">1. SUBJECT / TUTOR</label>
+        <select x-model="subjectId" class="n-input">
+          <option value="">-- Choose Subject --</option>
+          {% for s in subjects %}<option value="{{ s.id }}">{{ s.code }} - {{ s.name }} ({{ s.tutor.name }})</option>{% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="block text-[var(--text-muted)] mb-1">2. INTENT</label>
+        <select x-model="intent" class="n-input">
+          <option value="leave">Leave Application</option>
+          <option value="document">Document Submission</option>
+          <option value="homework">Homework / Lab Submission</option>
+          <option value="custom">Custom Query</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-[var(--text-muted)] mb-1">3. REASON / CONTEXT</label>
+        <div class="flex gap-2">
+          <input type="text" x-model="notes" placeholder="Reason..." class="n-input">
+          <button type="button" @click="generateAiDraft()" class="n-pill n-red px-4 py-2 font-bold shrink-0">AI DRAFT</button>
+        </div>
+      </div>
+    </div>
+    <form method="POST" class="space-y-3 text-xs border-t border-[var(--border-color)] pt-4">
+      {% csrf_token %}<input type="hidden" name="action" value="send_smtp">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <input type="email" name="recipient_email" x-model="recipientEmail" required placeholder="tutor@college.edu" class="n-input">
+        <input type="text" name="subject" x-model="mailSubject" required placeholder="Subject line" class="n-input">
+      </div>
+      <textarea name="body" rows="5" x-model="mailBody" required class="n-input"></textarea>
+      <button type="submit" class="n-pill n-red px-6 py-2.5 font-bold">SEND VIA SMTP &rarr;</button>
+    </form>
+  </div>
+
+  <div x-show="simOpen" style="display:none;" class="n-card p-6 space-y-4">
+    <h2 class="font-dot text-lg">TEST AI INBOUND MAIL SORTER</h2>
+    <form method="POST" action="{% url 'simulate_inbound_mail' %}" class="space-y-3 text-xs">
+      {% csrf_token %}
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <input type="text" name="sim_sender" value="Placement Cell <placements@college.edu>" class="n-input" required>
+        <input type="text" name="sim_subject" value="Google STEP Internship & Coding Drive" class="n-input" required>
+      </div>
+      <textarea name="sim_body" rows="2" class="n-input" required>Apply before tomorrow 5 PM with your updated resume.</textarea>
+      <button type="submit" class="n-pill n-red px-5 py-2 font-bold">RUN AI CLASSIFICATION</button>
+    </form>
+  </div>
+
+  <div class="flex flex-wrap gap-2 text-xs">
+    <a href="?cat=all" class="n-pill px-4 py-2 {% if selected_cat == 'all' %}n-red font-bold{% endif %}">ALL ({{ counts.all }})</a>
+    <a href="?cat=staff" class="n-pill px-4 py-2 {% if selected_cat == 'staff' %}n-red font-bold{% endif %}">STAFF ({{ counts.staff }})</a>
+    <a href="?cat=notice" class="n-pill px-4 py-2 {% if selected_cat == 'notice' %}n-red font-bold{% endif %}">NOTICE ({{ counts.notice }})</a>
+    <a href="?cat=placements" class="n-pill px-4 py-2 {% if selected_cat == 'placements' %}n-red font-bold{% endif %}">PLACEMENTS ({{ counts.placements }})</a>
+    <a href="?cat=competition" class="n-pill px-4 py-2 {% if selected_cat == 'competition' %}n-red font-bold{% endif %}">COMPETITION ({{ counts.competition }})</a>
+    <a href="?cat=others" class="n-pill px-4 py-2 {% if selected_cat == 'others' %}n-red font-bold{% endif %}">OTHERS ({{ counts.others }})</a>
+    <a href="?cat=sent" class="n-pill px-4 py-2 {% if selected_cat == 'sent' %}n-red font-bold{% endif %}">SENT ({{ counts.sent }})</a>
+  </div>
+
+  <div class="space-y-3">
+    {% for m in mails %}
+      <div class="n-card p-5 space-y-2 {% if m.is_urgent %}border-l-4 border-l-[#D71921]{% endif %}">
+        <div class="flex flex-wrap items-center justify-between gap-2 text-xs">
+          <div class="flex items-center gap-2">
+            <span class="uppercase px-2.5 py-0.5 rounded-full text-[10px] {% if m.is_urgent %}n-red{% else %}border border-[var(--border-color)]{% endif %}">{{ m.category }}</span>
+            <span class="font-bold">{{ m.sender_name }}</span>
+          </div>
+          <span class="text-[11px] text-[var(--text-muted)]">{{ m.timestamp|date:"d M Y, h:i A" }}</span>
+        </div>
+        <h3 class="font-bold text-sm">{{ m.subject }}</h3>
+        {% if m.ai_summary %}<div class="p-2.5 rounded-xl bg-[var(--bg-elevated)] text-xs text-[var(--text-muted)]"><strong class="n-red-text">AI SUMMARY:</strong> {{ m.ai_summary }}</div>{% endif %}
+        <p class="text-xs whitespace-pre-line pt-1">{{ m.body }}</p>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

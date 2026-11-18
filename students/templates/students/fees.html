@@ -1,0 +1,25 @@
+{% extends 'students/base.html' %}
+{% block content %}
+<div class="n-card p-6 space-y-5">
+  <h1 class="font-dot text-2xl">FEES PAYMENT & RECEIPT ARCHIVE</h1>
+  <div class="space-y-3">
+    {% for f in fee_records %}
+      <div class="p-5 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border-color)] flex flex-wrap items-center justify-between gap-4 text-xs">
+        <div class="space-y-1">
+          <div class="text-[10px] text-[var(--text-muted)]">SEMESTER {{ f.semester }} &bull; DUE {{ f.due_date }}</div>
+          <div class="font-dot text-lg">{{ f.fee_type }}</div>
+          <div class="font-bold text-sm">INR {{ f.amount }}</div>
+          {% if f.receipt_number %}<div class="text-[11px] text-[var(--text-muted)]">Receipt: {{ f.receipt_number }}</div>{% endif %}
+        </div>
+        <div>
+          {% if f.status == 'PAID' %}
+            <a href="{% url 'download_receipt' f.id %}" class="n-pill px-5 py-2.5 font-bold inline-block">DOWNLOAD RECEIPT &darr;</a>
+          {% else %}
+            <form method="POST" action="{% url 'pay_fee' f.id %}">{% csrf_token %}<button type="submit" class="n-pill n-red px-6 py-2.5 font-bold">PAY INR {{ f.amount }} NOW</button></form>
+          {% endif %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

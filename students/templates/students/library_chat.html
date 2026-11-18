@@ -1,0 +1,44 @@
+{% extends 'students/base.html' %}
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <div class="n-card p-5 space-y-5 text-xs">
+    <h2 class="font-dot text-lg">LIBRARY REQUEST THREADS</h2>
+    <form method="POST" class="space-y-2.5 p-3.5 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border-color)]">
+      {% csrf_token %}<input type="hidden" name="action" value="new_thread">
+      <select name="tutor_id" required class="n-input">{% for t in tutors %}<option value="{{ t.id }}">{{ t.name }} ({{ t.staff_code }})</option>{% endfor %}</select>
+      <input type="text" name="book_title" required placeholder="Book / IEEE Paper Title..." class="n-input">
+      <input type="text" name="message" required placeholder="Request note to tutor..." class="n-input">
+      <button type="submit" class="w-full n-pill n-red py-2 font-bold">OPEN CHAT REQUEST</button>
+    </form>
+    <div class="space-y-2">
+      {% for t in threads %}
+        <a href="?thread={{ t.id }}" class="block p-3 rounded-xl border {% if active_thread and active_thread.id == t.id %}border-[#D71921] bg-[var(--bg-elevated)]{% else %}border-[var(--border-color)]{% endif %}">
+          <div class="font-bold truncate">{{ t.book_or_resource_title }}</div>
+          <div class="text-[11px] text-[var(--text-muted)]">Tutor: {{ t.tutor.name }} &bull; {{ t.status }}</div>
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="lg:col-span-2 n-card p-6 flex flex-col justify-between min-h-[480px] text-xs">
+    {% if active_thread %}
+      <div class="border-b border-[var(--border-color)] pb-3 flex items-center justify-between">
+        <div><h3 class="font-dot text-lg">{{ active_thread.book_or_resource_title }}</h3><p class="text-[var(--text-muted)]">Tutor: {{ active_thread.tutor.name }}</p></div>
+        <span class="px-3 py-1 rounded-full border border-[var(--border-color)]">{{ active_thread.status }}</span>
+      </div>
+      <div class="flex-1 space-y-3 py-4 overflow-y-auto max-h-[320px]">
+        {% for m in active_thread.messages.all %}
+          <div class="p-3.5 rounded-2xl {% if m.sender_is_student %}bg-[var(--bg-elevated)] ml-10{% else %}bg-[var(--bg-elevated)] border border-[#D71921]/50 mr-10{% endif %}">
+            <div class="text-[10px] text-[var(--text-muted)] mb-1">{{ m.sender_name }} &bull; {{ m.timestamp|date:"d M, h:i A" }}</div>
+            <div>{{ m.message }}</div>
+          </div>
+        {% endfor %}
+      </div>
+      <form method="POST" class="flex gap-2 pt-3 border-t border-[var(--border-color)]">
+        {% csrf_token %}<input type="hidden" name="action" value="send_message"><input type="hidden" name="thread_id" value="{{ active_thread.id }}">
+        <input type="text" name="message" required placeholder="Reply to tutor..." class="n-input">
+        <button type="submit" class="n-pill n-red px-6 py-2.5 font-bold">SEND</button>
+      </form>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

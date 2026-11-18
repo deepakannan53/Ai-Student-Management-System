@@ -1,0 +1,37 @@
+{% extends 'students/base.html' %}
+{% block content %}
+<div class="n-card p-6 space-y-6">
+  <div class="flex flex-wrap items-center justify-between gap-4 border-b border-[var(--border-color)] pb-4">
+    <div class="flex items-center gap-4">
+      <div class="w-16 h-16 rounded-full bg-[#D71921] text-white font-dot text-2xl flex items-center justify-center">{{ profile.avatar_initials }}</div>
+      <div>
+        <h1 class="font-dot text-2xl">{{ profile.user.get_full_name|default:profile.user.username }}</h1>
+        <p class="text-xs text-[var(--text-muted)]">{{ profile.department }} &bull; SEMESTER {{ profile.semester }}</p>
+      </div>
+    </div>
+    <div class="text-right text-xs"><div>ROLL NO: <span class="font-bold">{{ profile.roll_no }}</span></div><div>REG NO: <span class="font-bold">{{ profile.register_no }}</span></div></div>
+  </div>
+  <form method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+    {% csrf_token %}
+    <div><label class="block text-[var(--text-muted)] mb-1">FIRST NAME</label><input type="text" name="first_name" value="{{ profile.user.first_name }}" class="n-input"></div>
+    <div><label class="block text-[var(--text-muted)] mb-1">LAST NAME</label><input type="text" name="last_name" value="{{ profile.user.last_name }}" class="n-input"></div>
+    <div><label class="block text-[var(--text-muted)] mb-1">COLLEGE EMAIL</label><input type="email" name="college_email" value="{{ profile.college_email }}" class="n-input"></div>
+    <div><label class="block text-[var(--text-muted)] mb-1">PHONE</label><input type="text" name="phone" value="{{ profile.phone }}" class="n-input"></div>
+    <div><label class="block text-[var(--text-muted)] mb-1">SECTION</label><input type="text" name="section" value="{{ profile.section }}" class="n-input"></div>
+    <div class="flex items-end"><button type="submit" class="n-pill n-red px-6 py-2.5 font-bold">UPDATE PROFILE</button></div>
+  </form>
+</div>
+<div class="n-card p-6 space-y-4">
+  <h2 class="font-dot text-lg">5 ENROLLED SUBJECTS & ASSIGNED STAFF TUTORS</h2>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+    {% for s in subjects %}
+      <div class="p-4 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border-color)] space-y-1">
+        <div class="n-red-text font-bold">{{ s.code }} ({{ s.credits }} Credits)</div>
+        <div class="font-bold text-sm">{{ s.name }}</div>
+        <div class="text-[var(--text-muted)] pt-2">Tutor: {{ s.tutor.name }}</div>
+        <div class="text-[var(--text-muted)]">{{ s.tutor.email }}</div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends 'students/base.html' %}
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <div class="n-card p-6 space-y-6">
+    <h1 class="font-dot text-2xl">NOTHING OS // SYSTEM SETTINGS</h1>
+    <form method="POST" class="space-y-4 text-xs">
+      {% csrf_token %}
+      <div>
+        <label class="block text-[var(--text-muted)] mb-1">INTERFACE THEME</label>
+        <select name="theme_mode" class="n-input">
+          <option value="DARK" {% if profile.theme_mode == 'DARK' %}selected{% endif %}>Nothing Matte Black</option>
+          <option value="LIGHT" {% if profile.theme_mode == 'LIGHT' %}selected{% endif %}>Nothing Stark White</option>
+        </select>
+      </div>
+      <label class="flex items-center gap-3 p-3.5 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border-color)]">
+        <input type="checkbox" name="glyph_alerts_enabled" {% if profile.glyph_alerts_enabled %}checked{% endif %}>
+        <span>Enable Red Glyph Pulse Notification Bar</span>
+      </label>
+      <label class="flex items-center gap-3 p-3.5 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border-color)]">
+        <input type="checkbox" name="auto_triage_mail" {% if profile.auto_triage_mail %}checked{% endif %}>
+        <span>Enable LINE AI Automatic Mail Classification</span>
+      </label>
+      <div>
+        <label class="block text-[var(--text-muted)] mb-1">COLLEGE / GMAIL SMTP APP PASSWORD (16-CHAR)</label>
+        <input type="password" name="smtp_app_password" placeholder="xxxx xxxx xxxx xxxx (Leave blank to keep existing)" class="n-input">
+      </div>
+      <button type="submit" class="n-pill n-red px-6 py-2.5 font-bold">SAVE PREFERENCES</button>
+    </form>
+  </div>
+
+  <div class="n-card p-6 space-y-4 text-xs">
+    <div class="flex items-center justify-between">
+      <h2 class="font-dot text-xl">API KEY & .ENV ACTIVATION GUIDE</h2>
+      <span class="px-2.5 py-0.5 rounded-full text-[10px] {% if ai_status.is_live %}bg-emerald-600 text-white{% else %}n-red{% endif %}">{{ ai_status.label }}</span>
+    </div>
+    <p class="text-[var(--text-muted)] leading-relaxed">
+      Open the <code class="text-[var(--text-primary)] font-bold">.env</code> file in your project root folder and configure your keys:
+    </p>
+    <pre class="p-4 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border-color)] overflow-x-auto text-[11px] leading-relaxed">GEMINI_API_KEY=AIzaSyYourActualKeyHere
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+IMAP_HOST=imap.gmail.com</pre>
+    <ol class="list-decimal list-inside space-y-1.5 text-[var(--text-muted)]">
+      <li>Generate a free Gemini API key in <strong>Google AI Studio</strong>.</li>
+      <li>Paste it next to <code>GEMINI_API_KEY=</code> in <code>.env</code> (no quotes needed).</li>
+      <li>For real outbound tutor emails, generate a 16-character <strong>Google App Password</strong> and enter it on the left.</li>
+      <li>Restart <code>run_and_test.bat</code> to activate live Gemini 2.5 responses.</li>
+    </ol>
+  </div>
+</div>
+{% endblock %}

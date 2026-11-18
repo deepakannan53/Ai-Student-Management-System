@@ -1,0 +1,26 @@
+{% extends 'students/base.html' %}
+{% block content %}
+<div class="n-card p-6 space-y-4">
+  <h1 class="font-dot text-2xl">ONLINE ASSESSMENTS // PROCTORED</h1>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+    {% for item in quiz_cards %}
+      <div class="p-5 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border-color)] space-y-4">
+        <div class="flex items-center justify-between text-xs">
+          <span class="px-2.5 py-0.5 rounded-full n-red font-bold">{{ item.quiz.subject.code }}</span>
+          <span class="text-[var(--text-muted)]">{{ item.quiz.duration_minutes }} MINS &bull; {{ item.quiz.total_marks }} MARKS</span>
+        </div>
+        <h3 class="font-dot text-lg">{{ item.quiz.title }}</h3>
+        <div class="p-3 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] text-[11px] whitespace-pre-line text-[var(--text-muted)]">{{ item.quiz.rules_text }}</div>
+        {% if item.attempt and item.attempt.is_completed %}
+          <div class="p-3 rounded-xl border border-white/30 text-xs flex items-center justify-between">
+            <span>COMPLETED // SCORE: <strong>{{ item.attempt.score }}/{{ item.quiz.total_marks }}</strong></span>
+            <span class="text-[10px] text-[var(--text-muted)]">Tab Violations: {{ item.attempt.tab_violations }}</span>
+          </div>
+        {% else %}
+          <a href="{% url 'take_quiz' item.quiz.id %}" class="inline-block n-pill n-red px-5 py-2.5 text-xs font-bold">ACCEPT RULES & START QUIZ &rarr;</a>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

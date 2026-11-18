@@ -1,0 +1,19 @@
+{% extends 'students/base.html' %}
+{% block content %}
+<div class="n-card p-6 space-y-5">
+  <h1 class="font-dot text-2xl">CAMPUS NOTICE BOARD</h1>
+  <div class="space-y-3">
+    {% for n in notices %}
+      <div class="p-5 rounded-2xl bg-[var(--bg-elevated)] border {% if n.priority == 'URGENT' %}border-[#D71921]{% else %}border-[var(--border-color)]{% endif %} space-y-2 text-xs">
+        <div class="flex items-center justify-between">
+          <span class="px-2.5 py-0.5 rounded-full text-[10px] {% if n.priority == 'URGENT' %}n-red font-bold{% else %}border border-[var(--border-color)]{% endif %}">{{ n.priority }}</span>
+          <span class="text-[var(--text-muted)]">{{ n.posted_at|date:"d M Y, h:i A" }}</span>
+        </div>
+        <h3 class="font-dot text-lg">{{ n.title }}</h3>
+        <p class="leading-relaxed">{{ n.content }}</p>
+        <div class="text-[11px] text-[var(--text-muted)] pt-1">Issued by: {{ n.posted_by }}</div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

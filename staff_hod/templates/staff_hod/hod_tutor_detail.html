@@ -1,0 +1,47 @@
+{% extends 'staff_hod/faculty_base.html' %}
+{% block content %}
+<div class="n-card p-6 space-y-4">
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <div>
+      <a href="{% url 'hod_dashboard' %}" class="text-xs text-[var(--text-muted)] hover:text-white">&larr; BACK TO HOD CONSOLE</a>
+      <h1 class="font-dot text-2xl mt-1">TUTOR AUDIT // {{ target_tutor.name }} ({{ target_tutor.staff_code }})</h1>
+      <p class="text-xs text-[var(--text-muted)]">{{ target_tutor.designation }} &bull; {{ target_tutor.email }}</p>
+    </div>
+    <a href="{% url 'hod_download_report' 'academics' %}" class="n-pill n-red px-4 py-2 text-xs font-bold">&darr; DOWNLOAD FULL ACADEMICS CSV</a>
+  </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 text-xs">
+  <div class="n-card p-5 space-y-3">
+    <h2 class="font-dot text-lg">HOMEWORKS & QUIZZES ASSIGNED</h2>
+    {% for hw in homeworks %}
+      <div class="p-3.5 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-color)]">
+        <div class="font-bold">[HW] {{ hw.subject.code }} — {{ hw.title }}</div>
+        <div class="text-[var(--text-muted)] mt-1">{{ hw.description }}</div>
+      </div>
+    {% endfor %}
+    {% for qz in quizzes %}
+      <div class="p-3.5 rounded-xl bg-[var(--bg-elevated)] border border-[#D71921]/50">
+        <div class="font-bold n-red-text">[PROCTORED QUIZ] {{ qz.subject.code }} — {{ qz.title }}</div>
+        <div class="text-[var(--text-muted)] mt-1">Duration: {{ qz.duration_minutes }} mins &bull; Max Tab Switches: {{ qz.max_tab_switches }}</div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <div class="n-card p-5 space-y-3">
+    <h2 class="font-dot text-lg">STUDENT ATTENDANCE & MARKS UNDER TUTOR</h2>
+    {% for att in attendance_records %}
+      <div class="p-3.5 rounded-xl bg-[var(--bg-elevated)] flex justify-between items-center">
+        <span><strong>{{ att.student.roll_no }}</strong> ({{ att.subject.code }})</span>
+        <span class="{% if att.is_low %}n-red-text font-bold{% endif %}">{{ att.attended_classes }}/{{ att.total_classes }} ({{ att.percentage }}%)</span>
+      </div>
+    {% endfor %}
+    {% for mk in marks_records %}
+      <div class="p-3.5 rounded-xl bg-[var(--bg-elevated)] flex justify-between items-center">
+        <span><strong>{{ mk.student.roll_no }}</strong> Internal Total</span>
+        <span class="font-bold n-red-text">{{ mk.total_internal }} / 100</span>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
